@@ -181,7 +181,7 @@ Navigate to `http://127.0.0.1:5000` in your browser.
 
 ## Author
 
-Wahdat Muhammad Askari
+[Wahdat Muhammad Askari](https://github.com/waadi-me)
 
 ---
 
