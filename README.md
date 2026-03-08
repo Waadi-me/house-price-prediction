@@ -1,10 +1,10 @@
-# 🏠 HouseIQ — House Price Prediction
+# HouseIQ — House Price Prediction
 
 > End-to-end machine learning project predicting residential home sale prices in King County, WA using Linear & Polynomial Regression — complete with a live web interface powered by a Flask backend.
 
 ---
 
-## 📸 Preview
+## Preview
 
 | Results Dashboard | Live Predictor |
 |---|---|
@@ -12,7 +12,7 @@
 
 ---
 
-## 🚀 Features
+## Features
 
 - **Full ML Pipeline** — data loading, EDA, feature engineering, model training, and evaluation
 - **3 Models Compared** — Linear Regression, Polynomial Degree 2, Polynomial Degree 3
@@ -49,7 +49,7 @@ house-price-prediction/
 
 ---
 
-## 📊 Dataset
+## Dataset
 
 **King County, WA House Sales**
 (https://www.kaggle.com/datasets/shree1992/housedata)
@@ -68,19 +68,19 @@ house-price-prediction/
 
 ---
 
-## 🤖 Model Results
+## Model Results
 
 | Model | RMSE | MAE | R² Score |
 |---|---|---|---|
 | Linear Regression | $187,400 | $128,200 | 0.6842 |
 | Polynomial · Degree 2 | $174,100 | $118,600 | 0.7134 |
-| Polynomial · Degree 3 | $171,800 | $115,300 | **0.7209** ✅ |
+| Polynomial · Degree 3 | $171,800 | $115,300 | **0.7209** |
 
 > **Best model:** Polynomial Regression (Degree 3) with Ridge regularization (α=100)
 
 ---
 
-## ⚙️ Setup & Usage
+## Setup & Usage
 
 ### 1. Clone the repository
 ```bash
@@ -116,7 +116,7 @@ Navigate to `http://127.0.0.1:5000` in your browser.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Tools |
 |---|---|
@@ -129,7 +129,7 @@ Navigate to `http://127.0.0.1:5000` in your browser.
 
 ---
 
-## 📁 API Endpoint
+## API Endpoint
 
 **POST** `/predict`
 
@@ -167,7 +167,7 @@ Navigate to `http://127.0.0.1:5000` in your browser.
 
 ---
 
-## 🚧 Future Improvements
+## Future Improvements
 
 - [ ] Try XGBoost / Random Forest for higher R²
 - [ ] Log-transform the target variable (`price`) for better linear model performance
@@ -185,6 +185,6 @@ Wahdat Muhammad Askari
 
 ---
 
-## 📄 License
+## License
 
 This project is open source and available under the [MIT License](LICENSE).
