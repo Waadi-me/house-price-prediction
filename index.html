@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HouseIQ — Price Prediction</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: #23232f;
+    --accent: #f0c040;
+    --accent2: #e05a2b;
+    --text: #f0eff8;
+    --muted: #7a7a99;
+    --green: #3ddc97;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4 { font-family: 'Syne', sans-serif; line-height: 1.1; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 4rem;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.3rem;
+    letter-spacing: -0.5px;
+  }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none;
+    font-size: 0.9rem; font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 8rem 4rem 4rem;
+    position: relative; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 70% 50%, rgba(240,192,64,0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 40% at 20% 80%, rgba(224,90,43,0.06) 0%, transparent 60%);
+  }
+  .hero-grid {
+    position: absolute; inset: 0; z-index: 0; opacity: 0.03;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: rgba(240,192,64,0.1); border: 1px solid rgba(240,192,64,0.25);
+    color: var(--accent); font-size: 0.78rem; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 0.35rem 0.9rem; border-radius: 100px;
+    margin-bottom: 2rem; width: fit-content;
+    position: relative; z-index: 1;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero-tag::before {
+    content: ''; width: 6px; height: 6px;
+    background: var(--accent); border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+  .hero h1 {
+    font-size: clamp(3rem, 7vw, 6.5rem);
+    font-weight: 800; letter-spacing: -3px;
+    position: relative; z-index: 1;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .hero h1 em {
+    font-style: normal; color: var(--accent);
+    position: relative;
+  }
+  .hero h1 em::after {
+    content: '';
+    position: absolute; left: 0; bottom: 4px; right: 0;
+    height: 4px; background: var(--accent); opacity: 0.3;
+    border-radius: 2px;
+  }
+  .hero-sub {
+    max-width: 520px; color: var(--muted);
+    font-size: 1.1rem; font-weight: 300;
+    margin-top: 1.5rem;
+    position: relative; z-index: 1;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+  .hero-ctas {
+    display: flex; gap: 1rem; margin-top: 2.5rem;
+    position: relative; z-index: 1;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+  .btn-primary {
+    background: var(--accent); color: #0a0a0f;
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 0.9rem; padding: 0.85rem 2rem;
+    border: none; border-radius: 6px; cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(240,192,64,0.3);
+  }
+  .btn-ghost {
+    background: transparent; color: var(--text);
+    font-family: 'Syne', sans-serif; font-weight: 600;
+    font-size: 0.9rem; padding: 0.85rem 2rem;
+    border: 1px solid var(--border); border-radius: 6px;
+    cursor: pointer; text-decoration: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .btn-ghost:hover { border-color: var(--muted); background: rgba(255,255,255,0.03); }
+
+  .hero-stats {
+    display: flex; gap: 3rem; margin-top: 5rem;
+    position: relative; z-index: 1;
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+  .stat-item { display: flex; flex-direction: column; gap: 0.2rem; }
+  .stat-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem; font-weight: 800; color: var(--text);
+  }
+  .stat-val span { color: var(--accent); }
+  .stat-label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SECTIONS ── */
+  section { padding: 7rem 4rem; }
+  .section-tag {
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  .section-title {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800; letter-spacing: -1.5px;
+    margin-bottom: 1rem;
+  }
+  .section-sub { color: var(--muted); font-size: 1.05rem; max-width: 500px; }
+
+  /* ── OVERVIEW ── */
+  #overview { background: var(--surface); border-top: 1px solid var(--border); }
+  .overview-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 5rem; align-items: center; margin-top: 4rem;
+  }
+  .overview-cards { display: flex; flex-direction: column; gap: 1rem; }
+  .ov-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem;
+    display: flex; align-items: flex-start; gap: 1rem;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .ov-card:hover { border-color: var(--accent); transform: translateX(6px); }
+  .ov-icon {
+    width: 40px; height: 40px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+  }
+  .ov-card h4 { font-family: 'Syne', sans-serif; font-size: 0.95rem; margin-bottom: 0.3rem; }
+  .ov-card p { font-size: 0.85rem; color: var(--muted); }
+
+  /* ── HOW IT WORKS ── */
+  #how { border-top: 1px solid var(--border); }
+  .steps {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1.5px; margin-top: 4rem;
+    background: var(--border); border-radius: 16px; overflow: hidden;
+  }
+  .step {
+    background: var(--card); padding: 2.5rem 2rem;
+    position: relative; transition: background 0.3s;
+  }
+  .step:hover { background: #1c1c28; }
+  .step-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 4rem; font-weight: 800;
+    color: rgba(240,192,64,0.1); line-height: 1;
+    margin-bottom: 1.5rem;
+    transition: color 0.3s;
+  }
+  .step:hover .step-num { color: rgba(240,192,64,0.2); }
+  .step h3 { font-size: 1rem; margin-bottom: 0.6rem; }
+  .step p { font-size: 0.85rem; color: var(--muted); }
+  .step-tag {
+    display: inline-block; font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 0.2rem 0.6rem; border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  /* ── RESULTS ── */
+  #results { background: var(--surface); border-top: 1px solid var(--border); }
+
+  /* Tab nav */
+  .tabs-header {
+    display: flex; align-items: center; gap: 0;
+    margin-top: 3rem;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 0.4rem;
+    width: fit-content;
+  }
+  .tab-btn {
+    font-family: 'Syne', sans-serif; font-size: 0.8rem; font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0.65rem 1.3rem; border-radius: 8px;
+    border: none; cursor: pointer;
+    background: transparent; color: var(--muted);
+    transition: background 0.25s, color 0.25s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { background: var(--bg); color: var(--text); }
+  .tab-btn.active[data-tab="0"] { box-shadow: 0 0 0 1px rgba(61,220,151,0.4); color: var(--green); }
+  .tab-btn.active[data-tab="1"] { box-shadow: 0 0 0 1px rgba(240,192,64,0.4); color: var(--accent); }
+  .tab-btn.active[data-tab="2"] { box-shadow: 0 0 0 1px rgba(224,90,43,0.4); color: var(--accent2); }
+  .tab-btn.active[data-tab="3"] { box-shadow: 0 0 0 1px rgba(120,100,240,0.4); color: #a090f0; }
+
+  /* Tab panels — show/hide approach, no slider */
+  .tab-panel {
+    display: none;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-top: 1.5rem;
+    grid-template-columns: 300px 1fr;
+    gap: 0;
+    overflow: hidden;
+  }
+  .tab-panel.active { display: grid; animation: fadeIn 0.25s ease; }
+
+  /* Left: metrics */
+  .tab-metrics {
+    padding: 2.5rem; border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; justify-content: center; gap: 1rem;
+  }
+  .tab-model-badge {
+    display: inline-flex; align-items: center;
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 0.3rem 0.8rem;
+    border-radius: 100px; width: fit-content; margin-bottom: 0.3rem;
+  }
+  .tab-model-title {
+    font-family: 'Syne', sans-serif; font-size: 1.5rem;
+    font-weight: 800; letter-spacing: -0.5px; margin-bottom: 0.2rem;
+  }
+  .tab-model-desc { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.5rem; }
+  .metric-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
+  .metric-row:last-of-type { border-bottom: none; }
+  .metric-label { font-size: 0.8rem; color: var(--muted); }
+  .metric-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
+  .r2-bar-wrap { margin-top: 0.8rem; }
+  .r2-bar-label { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem; }
+  .r2-bar-bg { background: var(--border); border-radius: 100px; height: 8px; overflow: hidden; }
+  .r2-bar-fill { height: 100%; border-radius: 100px; transition: width 1.2s cubic-bezier(0.16,1,0.3,1); width: 0; }
+
+  /* Right: figure */
+  .tab-figure {
+    padding: 2rem;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 0.8rem; background: #0d0d14;
+  }
+  .tab-figure-label {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted); align-self: flex-start;
+  }
+  .tab-figure img {
+    max-width: 100%; max-height: 380px;
+    width: auto; height: auto;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    display: block;
+    cursor: zoom-in;
+  }
+  .tab-figure-placeholder {
+    width: 100%; height: 280px;
+    border-radius: 8px; border: 2px dashed var(--border);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 0.8rem;
+    color: var(--muted);
+  }
+  .tab-figure-placeholder .ph-icon { font-size: 2.5rem; opacity: 0.3; }
+  .tab-figure-placeholder .ph-text { font-size: 0.82rem; text-align: center; line-height: 1.6; }
+  .tab-figure-placeholder code {
+    font-size: 0.75rem; background: var(--border);
+    padding: 0.2rem 0.5rem; border-radius: 4px; color: var(--accent);
+  }
+
+  /* Correlation chart (tab 3) */
+  .bar-chart { display: flex; flex-direction: column; gap: 1rem; width: 100%; }
+  .bar-row { display: flex; flex-direction: column; gap: 0.4rem; }
+  .bar-info { display: flex; justify-content: space-between; align-items: center; }
+  .bar-name { font-size: 0.82rem; font-weight: 500; }
+  .bar-score { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.85rem; }
+  .bar-track { background: var(--border); border-radius: 100px; height: 8px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 100px; transition: width 1.5s cubic-bezier(0.16,1,0.3,1); width: 0; }
+
+  /* ── PREDICTION FORM ── */
+  #predict { border-top: 1px solid var(--border); }
+  .predict-wrap {
+    display: grid; grid-template-columns: 1fr 1.2fr;
+    gap: 4rem; margin-top: 4rem; align-items: start;
+  }
+  .form-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 2.5rem;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+  .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label {
+    font-size: 0.75rem; font-weight: 600;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .form-group input, .form-group select {
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem; padding: 0.75rem 1rem;
+    border-radius: 8px; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+  }
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(240,192,64,0.1);
+  }
+  .range-hint { font-size: 0.7rem; color: var(--muted); }
+  .form-submit {
+    width: 100%; margin-top: 1.5rem;
+    background: var(--accent); color: #0a0a0f;
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 1rem; padding: 1rem;
+    border: none; border-radius: 8px; cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .form-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(240,192,64,0.35);
+  }
+
+  .result-panel { display: flex; flex-direction: column; gap: 1.5rem; }
+  .result-hero-card {
+    background: linear-gradient(135deg, #1a1a10 0%, #1c180a 100%);
+    border: 1px solid rgba(240,192,64,0.25);
+    border-radius: 16px; padding: 3rem 2.5rem;
+    text-align: center;
+  }
+  .result-label {
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 0.8rem;
+  }
+  .result-price {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: clamp(2.5rem, 5vw, 4rem); letter-spacing: -2px;
+    color: var(--accent); transition: all 0.4s ease;
+  }
+  .result-sub { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
+  .result-placeholder { opacity: 0.3; }
+
+  .confidence-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem;
+  }
+  .confidence-title {
+    font-family: 'Syne', sans-serif; font-size: 0.8rem;
+    font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 1.2rem;
+  }
+  .conf-row {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.88rem;
+  }
+  .conf-row:last-child { border-bottom: none; }
+  .conf-key { color: var(--muted); }
+  .conf-val { font-weight: 500; }
+
+  .insight-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem;
+  }
+  .insight-title {
+    font-family: 'Syne', sans-serif; font-size: 0.8rem;
+    font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 1rem;
+  }
+  .insight-list { display: flex; flex-direction: column; gap: 0.6rem; }
+  .insight-item {
+    display: flex; align-items: center; gap: 0.6rem;
+    font-size: 0.85rem; color: var(--muted);
+  }
+  .insight-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 3rem 4rem;
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--muted); font-size: 0.85rem;
+  }
+  .footer-logo { font-family: 'Syne', sans-serif; font-weight: 800; }
+  .footer-logo span { color: var(--accent); }
+
+  /* ── SCROLL REVEAL ── */
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── LIGHTBOX ── */
+  .lightbox {
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,0.88); backdrop-filter: blur(10px);
+    align-items: center; justify-content: center; cursor: zoom-out;
+  }
+  .lightbox.open { display: flex; animation: fadeIn 0.2s ease; }
+  .lightbox img {
+    max-width: 90vw; max-height: 90vh;
+    object-fit: contain; border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    animation: zoomIn 0.25s cubic-bezier(0.16,1,0.3,1);
+    cursor: default;
+  }
+  .lightbox-close {
+    position: absolute; top: 1.5rem; right: 1.5rem;
+    width: 40px; height: 40px; border-radius: 8px;
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text); font-size: 1.1rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: border-color 0.2s, color 0.2s;
+    z-index: 10000;
+  }
+  .lightbox-close:hover { border-color: var(--accent); color: var(--accent); }
+  .tab-figure img { cursor: zoom-in; }
+  @keyframes zoomIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+
+  @media (max-width: 900px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    section { padding: 5rem 1.5rem; }
+    .hero { padding: 7rem 1.5rem 3rem; }
+    .overview-grid, .results-grid, .predict-wrap { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr 1fr; }
+    .hero-stats { gap: 2rem; flex-wrap: wrap; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; }
+  }
+  /* ── Image Lightbox ── */
+  .lightbox {
+    display: none; position: fixed; inset: 0; z-index: 999;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+    align-items: center; justify-content: center; cursor: zoom-out;
+    pointer-events: none;
+  }
+  .lightbox.open {
+    display: flex;
+    pointer-events: all;
+    animation: fadeIn 0.2s ease;
+  }
+  .lightbox img {
+    max-width: 90vw; max-height: 90vh;
+    object-fit: contain; border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    animation: zoomIn 0.25s cubic-bezier(0.16,1,0.3,1);
+  }
+  .lightbox-close {
+    position: absolute; top: 1.5rem; right: 1.5rem;
+    width: 40px; height: 40px; border-radius: 8px;
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text); font-size: 1.1rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: border-color 0.2s;
+  }
+  .lightbox-close:hover { border-color: var(--accent); color: var(--accent); }
+  .tab-figure img { cursor: zoom-in; }
+  @keyframes zoomIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">House<span>IQ</span></div>
+  <ul class="nav-links">
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#how">Methodology</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#predict">Predict</a></li>
+  </ul>
+  <a href="#predict" class="btn-primary" style="font-size:0.82rem; padding:0.6rem 1.4rem;">Try It →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-tag">Machine Learning · King County, WA</div>
+  <h1>Predict House<br/><em>Prices</em> with ML</h1>
+  <p class="hero-sub">Linear and polynomial regression models trained on 4,600 real home sales. Enter any house's details and get an instant price estimate.</p>
+  <div class="hero-ctas">
+    <a href="#predict" class="btn-primary">Try the Predictor</a>
+    <a href="#how" class="btn-ghost">How it works</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat-item">
+      <div class="stat-val">4,600<span>+</span></div>
+      <div class="stat-label">Training Samples</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">17<span></span></div>
+      <div class="stat-label">Features Used</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">R²<span> 0.71</span></div>
+      <div class="stat-label">Best Model Score</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">3<span>x</span></div>
+      <div class="stat-label">Models Compared</div>
+    </div>
+  </div>
+</section>
+
+<!-- OVERVIEW -->
+<section id="overview">
+  <div class="section-tag reveal">Project Overview</div>
+  <h2 class="section-title reveal">What is this project?</h2>
+  <p class="section-sub reveal">A complete end-to-end machine learning pipeline built from scratch to understand and predict residential home sale prices.</p>
+  <div class="overview-grid">
+    <div>
+      <p style="color:var(--muted); line-height:1.9; font-size:1rem;" class="reveal">
+        This project takes raw King County housing data and transforms it into accurate price predictions using classical regression techniques. Every step — from exploratory analysis to model evaluation — is done transparently so you can understand exactly how the predictions are made.
+      </p>
+      <p style="color:var(--muted); line-height:1.9; font-size:1rem; margin-top:1.2rem;" class="reveal">
+        The dataset contains <strong style="color:var(--text)">4,600 real home sales</strong> across cities like Seattle, Bellevue, Kirkland, and Renton. Features include physical attributes, location, condition, renovation history, and more.
+      </p>
+      <div style="display:flex; gap:1rem; margin-top:2rem;" class="reveal">
+        <div style="background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1rem 1.4rem; text-align:center;">
+          <div style="font-family:'Syne',sans-serif; font-weight:800; font-size:1.4rem; color:var(--accent);">18</div>
+          <div style="font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;">Raw Columns</div>
+        </div>
+        <div style="background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1rem 1.4rem; text-align:center;">
+          <div style="font-family:'Syne',sans-serif; font-weight:800; font-size:1.4rem; color:var(--accent);">+6</div>
+          <div style="font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;">Engineered</div>
+        </div>
+        <div style="background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1rem 1.4rem; text-align:center;">
+          <div style="font-family:'Syne',sans-serif; font-weight:800; font-size:1.4rem; color:var(--accent);">80/20</div>
+          <div style="font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;">Train/Test</div>
+        </div>
+      </div>
+    </div>
+    <div class="overview-cards reveal">
+      <div class="ov-card">
+        <div class="ov-icon" style="background:rgba(240,192,64,0.1);">🏠</div>
+        <div>
+          <h4>Real Dataset</h4>
+          <p>King County, WA home sales with 18 raw features including location, size, condition, and renovation history.</p>
+        </div>
+      </div>
+      <div class="ov-card">
+        <div class="ov-icon" style="background:rgba(61,220,151,0.1);">⚙️</div>
+        <div>
+          <h4>Feature Engineering</h4>
+          <p>6 new features derived from raw data: house age, renovation status, bath-to-bed ratio, and city encoding.</p>
+        </div>
+      </div>
+      <div class="ov-card">
+        <div class="ov-icon" style="background:rgba(224,90,43,0.1);">📊</div>
+        <div>
+          <h4>Multiple Models</h4>
+          <p>Linear Regression vs Polynomial Regression (degree 2 & 3) compared side-by-side on RMSE, MAE, and R².</p>
+        </div>
+      </div>
+      <div class="ov-card">
+        <div class="ov-icon" style="background:rgba(120,100,240,0.1);">🔮</div>
+        <div>
+          <h4>Live Prediction</h4>
+          <p>Enter any house's features and instantly receive a predicted sale price from the trained model.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-tag reveal">Methodology</div>
+  <h2 class="section-title reveal">How it works</h2>
+  <p class="section-sub reveal">A reproducible 4-stage pipeline from raw CSV to prediction.</p>
+  <div class="steps reveal">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-tag" style="background:rgba(240,192,64,0.1); color:var(--accent);">Data</div>
+      <h3>Load & Explore</h3>
+      <p>Import the CSV, examine distributions, plot correlations, and identify the features most predictive of sale price.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-tag" style="background:rgba(61,220,151,0.1); color:var(--green);">Engineering</div>
+      <h3>Feature Engineering</h3>
+      <p>Parse dates, compute house age, encode cities, flag renovations, and create ratio features to give models richer signals.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-tag" style="background:rgba(224,90,43,0.1); color:var(--accent2);">Training</div>
+      <h3>Train & Evaluate</h3>
+      <p>Split 80/20, train Linear and Polynomial models, measure RMSE, MAE, and R² on the held-out test set.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-tag" style="background:rgba(120,100,240,0.1); color:#a090f0;">Predict</div>
+      <h3>Predict & Interpret</h3>
+      <p>Feed new house features into the best model, output price estimate, and inspect which features drove the prediction.</p>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section id="results">
+  <div class="section-tag reveal">Model Performance</div>
+  <h2 class="section-title reveal">Results</h2>
+  <p class="section-sub reveal">All three models evaluated on the same 920-sample test set. Click a tab to explore.</p>
+
+  <!-- Tab buttons -->
+  <div class="tabs-header reveal">
+    <button class="tab-btn active" data-tab="0">Linear Regression</button>
+    <button class="tab-btn" data-tab="1">Polynomial · Deg 2</button>
+    <button class="tab-btn" data-tab="2">Polynomial · Deg 3</button>
+    <button class="tab-btn" data-tab="3">Feature Correlation</button>
+  </div>
+
+  <!-- ── TAB 0: Linear Regression ── -->
+  <div class="tab-panel active reveal" data-panel="0">
+    <div class="tab-metrics">
+      <div class="tab-model-badge" style="background:rgba(61,220,151,0.1); color:var(--green);">Model 1 of 3</div>
+      <div class="tab-model-title">Linear Regression</div>
+      <div class="tab-model-desc">Baseline model. Fits a straight hyperplane through all 17 features to predict price.</div>
+      <div class="metric-row"><span class="metric-label">RMSE</span><span class="metric-val">$187,400</span></div>
+      <div class="metric-row"><span class="metric-label">MAE</span><span class="metric-val">$128,200</span></div>
+      <div class="metric-row"><span class="metric-label">R² Score</span><span class="metric-val" style="color:var(--green);">0.6842</span></div>
+      <div class="r2-bar-wrap">
+        <div class="r2-bar-label"><span>Model R²</span><span>68.4%</span></div>
+        <div class="r2-bar-bg"><div class="r2-bar-fill" id="bar0" data-width="68.42" style="background:var(--green);"></div></div>
+      </div>
+    </div>
+    <div class="tab-figure">
+      <div class="tab-figure-label">Figure — Linear Regression Results</div>
+      <img src="figures/linear_regression_results.png" alt="Linear Regression Results" onclick="openLightbox(this)" />
+    </div>
+  </div>
+
+  <!-- ── TAB 1: Polynomial Deg 2 ── -->
+  <div class="tab-panel reveal" data-panel="1" style="grid-template-columns: 1fr 1.4fr;">
+    <div class="tab-metrics" style="justify-content: center;">
+      <div class="tab-model-badge" style="background:rgba(240,192,64,0.1); color:var(--accent);">Model 2 of 3</div>
+      <div class="tab-model-title">Polynomial · Degree 2</div>
+      <div class="tab-model-desc">Adds squared and interaction terms. Captures non-linear relationships between features and price.</div>
+      <div class="metric-row"><span class="metric-label">RMSE</span><span class="metric-val">$174,100</span></div>
+      <div class="metric-row"><span class="metric-label">MAE</span><span class="metric-val">$118,600</span></div>
+      <div class="metric-row"><span class="metric-label">R² Score</span><span class="metric-val" style="color:var(--accent);">0.7134</span></div>
+      <div class="r2-bar-wrap">
+        <div class="r2-bar-label"><span>Model R²</span><span>71.3%</span></div>
+        <div class="r2-bar-bg"><div class="r2-bar-fill" id="bar1" data-width="71.34" style="background:var(--accent);"></div></div>
+      </div>
+      <div style="margin-top:1.2rem; padding:1rem; background:rgba(240,192,64,0.05); border:1px solid rgba(240,192,64,0.15); border-radius:8px;">
+        <div style="font-size:0.72rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent); margin-bottom:0.5rem;">Improvement vs Linear</div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+          <span style="color:var(--muted);">RMSE reduced by</span>
+          <span style="font-weight:600; color:var(--green);">↓ $13,300</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-top:0.3rem;">
+          <span style="color:var(--muted);">R² gained</span>
+          <span style="font-weight:600; color:var(--green);">↑ +0.0292</span>
+        </div>
+      </div>
+    </div>
+    <div class="tab-figure">
+      <div class="tab-figure-label">Figure — Polynomial Regression (Degree 2)</div>
+      <img src="figures/poly_deg2_results.png" alt="Polynomial Degree 2 Results" onclick="openLightbox(this)" />
+    </div>
+  </div>
+
+  <!-- ── TAB 2: Polynomial Deg 3 ── -->
+  <div class="tab-panel reveal" data-panel="2" style="grid-template-columns: 1fr 1.4fr;">
+    <div class="tab-metrics" style="justify-content: center;">
+      <div class="tab-model-badge" style="background:rgba(224,90,43,0.1); color:var(--accent2);">Model 3 of 3 · Best</div>
+      <div class="tab-model-title">Polynomial · Degree 3</div>
+      <div class="tab-model-desc">Highest R² of all three. Cubic terms allow richer curve-fitting, regularized with Ridge to avoid overfitting.</div>
+      <div class="metric-row"><span class="metric-label">RMSE</span><span class="metric-val">$171,800</span></div>
+      <div class="metric-row"><span class="metric-label">MAE</span><span class="metric-val">$115,300</span></div>
+      <div class="metric-row"><span class="metric-label">R² Score</span><span class="metric-val" style="color:var(--accent2);">0.7209</span></div>
+      <div class="r2-bar-wrap">
+        <div class="r2-bar-label"><span>Model R²</span><span>72.1%</span></div>
+        <div class="r2-bar-bg"><div class="r2-bar-fill" id="bar2" data-width="72.09" style="background:var(--accent2);"></div></div>
+      </div>
+      <div style="margin-top:1.2rem; padding:1rem; background:rgba(224,90,43,0.05); border:1px solid rgba(224,90,43,0.15); border-radius:8px;">
+        <div style="font-size:0.72rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent2); margin-bottom:0.5rem;">Improvement vs Linear</div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+          <span style="color:var(--muted);">RMSE reduced by</span>
+          <span style="font-weight:600; color:var(--green);">↓ $15,600</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-top:0.3rem;">
+          <span style="color:var(--muted);">R² gained</span>
+          <span style="font-weight:600; color:var(--green);">↑ +0.0367</span>
+        </div>
+      </div>
+    </div>
+    <div class="tab-figure">
+      <div class="tab-figure-label">Figure — Polynomial Regression (Degree 3)</div>
+      <img src="figures/poly_deg3_results.png" alt="Polynomial Degree 3 Results" onclick="openLightbox(this)" />
+    </div>
+  </div>
+
+  <!-- ── TAB 3: Feature Correlation ── -->
+  <div class="tab-panel reveal" data-panel="3" style="grid-template-columns: 1.5fr 0.6fr;">
+    <div class="tab-metrics" style="justify-content: center; gap: 0.8rem;">
+      <div class="tab-model-badge" style="background:rgba(120,100,240,0.1); color:#a090f0;">EDA</div>
+      <div class="tab-model-title">Feature Correlation</div>
+      <div class="tab-model-desc">Pearson correlation of each numeric feature with sale price. sqft_living dominates at 0.70, while condition barely moves the needle at 0.04.</div>
+      <div class="bar-chart" style="margin-top:0.8rem;">
+        <div class="bar-row"><div class="bar-info"><span class="bar-name">sqft_living</span><span class="bar-score" style="color:var(--accent);">0.70</span></div><div class="bar-track"><div class="bar-fill" id="cf0" data-width="70" style="background:var(--accent);"></div></div></div>
+        <div class="bar-row"><div class="bar-info"><span class="bar-name">sqft_above</span><span class="bar-score" style="color:var(--accent);">0.61</span></div><div class="bar-track"><div class="bar-fill" id="cf1" data-width="61" style="background:var(--accent);"></div></div></div>
+        <div class="bar-row"><div class="bar-info"><span class="bar-name">bathrooms</span><span class="bar-score" style="color:var(--green);">0.53</span></div><div class="bar-track"><div class="bar-fill" id="cf2" data-width="53" style="background:var(--green);"></div></div></div>
+        <div class="bar-row"><div class="bar-info"><span class="bar-name">view</span><span class="bar-score" style="color:var(--green);">0.40</span></div><div class="bar-track"><div class="bar-fill" id="cf3" data-width="40" style="background:var(--green);"></div></div></div>
+        <div class="bar-row"><div class="bar-info"><span class="bar-name">waterfront</span><span class="bar-score" style="color:var(--accent2);">0.37</span></div><div class="bar-track"><div class="bar-fill" id="cf4" data-width="37" style="background:var(--accent2);"></div></div></div>
+        <div class="bar-row"><div class="bar-info"><span class="bar-name">bedrooms</span><span class="bar-score" style="color:var(--accent2);">0.31</span></div><div class="bar-track"><div class="bar-fill" id="cf5" data-width="31" style="background:var(--accent2);"></div></div></div>
+        <div class="bar-row"><div class="bar-info"><span class="bar-name">condition</span><span class="bar-score" style="color:var(--muted);">0.04</span></div><div class="bar-track"><div class="bar-fill" id="cf6" data-width="4" style="background:var(--muted);"></div></div></div>
+      </div>
+      <div style="margin-top:1rem; padding:1rem; background:rgba(120,100,240,0.05); border:1px solid rgba(120,100,240,0.15); border-radius:8px;">
+        <div style="font-size:0.72rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#a090f0; margin-bottom:0.6rem;">Key Takeaways</div>
+        <div style="font-size:0.82rem; color:var(--muted); line-height:1.7;">
+          <div>📐 <strong style="color:var(--text);">Size dominates</strong> — sqft features account for the strongest correlations.</div>
+          <div style="margin-top:0.3rem;">🌊 <strong style="color:var(--text);">Waterfront & view</strong> add meaningful premiums despite lower frequency.</div>
+          <div style="margin-top:0.3rem;">🏚️ <strong style="color:var(--text);">Condition</strong> has near-zero correlation — buyers price location over upkeep.</div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-figure" style="justify-content: center;">
+      <div class="tab-figure-label">Figure — Correlation Heatmap</div>
+      <img src="figures/correlation_heatmap.png" alt="Correlation Heatmap" onclick="openLightbox(this)" style="max-height:320px;" />
+    </div>
+  </div>
+
+</section>
+
+<!-- PREDICT -->
+<section id="predict">
+  <div class="section-tag reveal">Live Demo</div>
+  <h2 class="section-title reveal">Predict a House Price</h2>
+  <p class="section-sub reveal">Fill in the details below and get an instant estimated sale price.</p>
+  <div class="predict-wrap">
+    <div class="form-card reveal">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Bedrooms</label>
+          <input type="number" id="bedrooms" min="1" max="10" placeholder="e.g. 3" />
+          <span class="range-hint">Range: 1 – 10</span>
+        </div>
+        <div class="form-group">
+          <label>Bathrooms</label>
+          <input type="number" id="bathrooms" min="0.5" max="6.5" step="0.5" placeholder="e.g. 2.0" />
+          <span class="range-hint">Range: 0.5 – 6.5</span>
+        </div>
+        <div class="form-group">
+          <label>Sqft Living</label>
+          <input type="number" id="sqft_living" min="200" max="10000" placeholder="e.g. 1800" />
+          <span class="range-hint">Range: 200 – 10,000 sq ft</span>
+        </div>
+        <div class="form-group">
+          <label>Sqft Lot</label>
+          <input type="number" id="sqft_lot" min="500" max="150000" placeholder="e.g. 6000" />
+          <span class="range-hint">Range: 500 – 150,000 sq ft</span>
+        </div>
+        <div class="form-group">
+          <label>Floors</label>
+          <input type="number" id="floors" min="1" max="3.5" step="0.5" placeholder="e.g. 1.5" />
+          <span class="range-hint">Range: 1 – 3.5</span>
+        </div>
+        <div class="form-group">
+          <label>Condition</label>
+          <select id="condition">
+            <option value="">Select...</option>
+            <option value="1">1 – Poor</option>
+            <option value="2">2 – Fair</option>
+            <option value="3">3 – Average</option>
+            <option value="4">4 – Good</option>
+            <option value="5">5 – Excellent</option>
+          </select>
+          <span class="range-hint">Range: 1 – 5</span>
+        </div>
+        <div class="form-group">
+          <label>View Quality</label>
+          <select id="view">
+            <option value="">Select...</option>
+            <option value="0">0 – None</option>
+            <option value="1">1 – Fair</option>
+            <option value="2">2 – Average</option>
+            <option value="3">3 – Good</option>
+            <option value="4">4 – Excellent</option>
+          </select>
+          <span class="range-hint">Range: 0 – 4</span>
+        </div>
+        <div class="form-group">
+          <label>Waterfront</label>
+          <select id="waterfront">
+            <option value="">Select...</option>
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+          </select>
+          <span class="range-hint">0 = No, 1 = Yes</span>
+        </div>
+        <div class="form-group">
+          <label>Sqft Above Ground</label>
+          <input type="number" id="sqft_above" min="200" max="10000" placeholder="e.g. 1800" />
+          <span class="range-hint">Range: 200 – 10,000 sq ft</span>
+        </div>
+        <div class="form-group">
+          <label>Sqft Basement</label>
+          <input type="number" id="sqft_basement" min="0" max="5000" placeholder="e.g. 0" />
+          <span class="range-hint">Range: 0 – 5,000 sq ft</span>
+        </div>
+        <div class="form-group">
+          <label>House Age (years)</label>
+          <input type="number" id="house_age" min="0" max="125" placeholder="e.g. 25" />
+          <span class="range-hint">Range: 0 – 125</span>
+        </div>
+        <div class="form-group">
+          <label>Was Renovated</label>
+          <select id="was_renovated">
+            <option value="">Select...</option>
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+          </select>
+          <span class="range-hint">0 = No, 1 = Yes</span>
+        </div>
+        <div class="form-group">
+          <label>Years Since Renovation</label>
+          <input type="number" id="yrs_since_renov" min="0" max="125" placeholder="e.g. 1" />
+          <span class="range-hint">Range: 0 – 125 (0 if not renovated)</span>
+        </div>
+        <div class="form-group">
+          <label>Sale Month</label>
+          <select id="sale_month">
+            <option value="">Select...</option>
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+          <span class="range-hint">Month the house was sold</span>
+        </div>
+        <div class="form-group full">
+          <label>City</label>
+          <select id="city">
+            <option value="">Select a city...</option>
+            <option value="0">Auburn</option>
+            <option value="1">Bellevue</option>
+            <option value="2">Burien</option>
+            <option value="3">Covington</option>
+            <option value="4">Des Moines</option>
+            <option value="5">Federal Way</option>
+            <option value="6">Issaquah</option>
+            <option value="7">Kenmore</option>
+            <option value="8">Kent</option>
+            <option value="9">Kirkland</option>
+            <option value="10">Maple Valley</option>
+            <option value="11">Mercer Island</option>
+            <option value="12">North Bend</option>
+            <option value="13">Other</option>
+            <option value="14">Redmond</option>
+            <option value="15">Renton</option>
+            <option value="16">Sammamish</option>
+            <option value="17">Seattle</option>
+            <option value="18">Shoreline</option>
+            <option value="19">Snoqualmie</option>
+            <option value="20">Woodinville</option>
+          </select>
+        </div>
+      </div>
+      <button class="form-submit" onclick="predictPrice()">Calculate Predicted Price →</button>
+    </div>
+
+    <div class="result-panel reveal">
+      <div class="result-hero-card">
+        <div class="result-label">Estimated Sale Price</div>
+        <div class="result-price result-placeholder" id="result-price">$—</div>
+        <div class="result-sub" id="result-sub">Fill in the form to get a prediction</div>
+      </div>
+      <div class="confidence-card">
+        <div class="confidence-title">Prediction Details</div>
+        <div class="conf-row"><span class="conf-key">Model Used</span><span class="conf-val" id="conf-model">—</span></div>
+        <div class="conf-row"><span class="conf-key">Typical Error (RMSE)</span><span class="conf-val" id="conf-rmse">—</span></div>
+        <div class="conf-row"><span class="conf-key">Low Estimate</span><span class="conf-val" id="conf-low">—</span></div>
+        <div class="conf-row"><span class="conf-key">High Estimate</span><span class="conf-val" id="conf-high">—</span></div>
+        <div class="conf-row"><span class="conf-key">Total Sqft (auto)</span><span class="conf-val" id="conf-sqft">—</span></div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-title">Key Price Drivers</div>
+        <div class="insight-list" id="insights">
+          <div class="insight-item"><div class="insight-dot" style="background:var(--muted);"></div><span>Submit the form to see insights</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">House<span>IQ</span></div>
+  <div>King County, WA · Linear & Polynomial Regression · 4,600 samples</div>
+  <div>Built with Python · scikit-learn · pandas</div>
+</footer>
+
+<script>
+  // ── Lightbox ───────────────────────────────────────────────────────────────
+  function openLightbox(img) {
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox-img').alt = img.alt;
+    document.getElementById('lightbox').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Close lightbox on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeLightbox();
+    });
+  });
+  // ── Scroll Reveal ──────────────────────────────────────────────────────────
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ── Tab switching (show/hide) ──────────────────────────────────────────────
+  const tabBtns  = document.querySelectorAll('.tab-btn');
+  const panels   = document.querySelectorAll('.tab-panel');
+  const barsAnimated = new Set();
+
+  function animateBarsInPanel(panel) {
+    panel.querySelectorAll('.r2-bar-fill, .bar-fill').forEach(b => {
+      b.style.width = b.dataset.width + '%';
+    });
+  }
+
+  function goToTab(idx) {
+    tabBtns.forEach((b, i) => b.classList.toggle('active', i === idx));
+    panels.forEach((p, i) => {
+      p.classList.toggle('active', i === idx);
+      if (i === idx && !barsAnimated.has(idx)) {
+        barsAnimated.add(idx);
+        setTimeout(() => animateBarsInPanel(p), 80);
+      }
+    });
+  }
+
+  tabBtns.forEach(btn => btn.addEventListener('click', () => goToTab(+btn.dataset.tab)));
+
+  // Animate first tab on load
+  setTimeout(() => animateBarsInPanel(panels[0]), 300);
+
+  // Results section scroll trigger for first tab
+  const resultsObs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) {
+      barsAnimated.add(0);
+      animateBarsInPanel(panels[0]);
+    }
+  }, { threshold: 0.2 });
+  resultsObs.observe(document.getElementById('results'));
+
+  // ── Prediction Logic (Flask backend) ──────────────────────────────────────
+  async function predictPrice() {
+    const get = id => parseFloat(document.getElementById(id).value);
+
+    const bedrooms      = get('bedrooms');
+    const bathrooms     = get('bathrooms');
+    const sqft_living   = get('sqft_living');
+    const sqft_lot      = get('sqft_lot');
+    const floors        = get('floors');
+    const waterfront    = get('waterfront');
+    const view          = get('view');
+    const condition     = get('condition');
+    const sqft_above    = get('sqft_above');
+    const sqft_basement = get('sqft_basement');
+    const house_age     = get('house_age');
+    const was_renovated = get('was_renovated');
+    const yrs_since_renov = get('yrs_since_renov');
+    const city_enc      = get('city');
+    const saleMonthEl   = document.getElementById('sale_month');
+    const sale_month    = saleMonthEl ? parseFloat(saleMonthEl.value) || new Date().getMonth() + 1 : new Date().getMonth() + 1;
+
+    // Validate all fields
+    const fields = { bedrooms, bathrooms, sqft_living, sqft_lot, floors,
+                     waterfront, view, condition, sqft_above, sqft_basement,
+                     house_age, was_renovated, yrs_since_renov, city_enc };
+    for (const [k, v] of Object.entries(fields)) {
+      if (isNaN(v)) {
+        alert(`Please fill in all fields. Missing: ${k.replace(/_/g, ' ')}`);
+        return;
+      }
+    }
+
+    // Show loading state
+    const btn      = document.querySelector('.form-submit');
+    const priceEl  = document.getElementById('result-price');
+    btn.textContent      = 'Calculating…';
+    btn.style.opacity    = '0.7';
+    btn.style.cursor     = 'not-allowed';
+    priceEl.textContent  = '…';
+    priceEl.classList.remove('result-placeholder');
+
+    try {
+      const res = await fetch('http://127.0.0.1:5000/predict', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bedrooms, bathrooms, sqft_living, sqft_lot, floors,
+          waterfront, view, condition, sqft_above, sqft_basement,
+          house_age, was_renovated, yrs_since_renov,
+          city_enc, sale_month
+        })
+      });
+
+      const data = await res.json();
+
+      if (!data.success) throw new Error(data.error);
+
+      const price = data.price;
+
+      // Update prediction details
+      document.getElementById('result-sub').textContent  = `Powered by ${data.model}`;
+      document.getElementById('conf-model').textContent  = data.model;
+      document.getElementById('conf-rmse').textContent   = '$174,100';
+      document.getElementById('conf-low').textContent    = '$' + data.low.toLocaleString();
+      document.getElementById('conf-high').textContent   = '$' + data.high.toLocaleString();
+      document.getElementById('conf-sqft').textContent   = data.total_sqft.toLocaleString() + ' sq ft';
+
+      // Insights
+      const insights = [];
+      if (sqft_living > 2500) insights.push({ color: 'var(--accent)',  text: 'Large living area — strong positive impact' });
+      if (waterfront === 1)   insights.push({ color: 'var(--accent)',  text: 'Waterfront property — significant premium' });
+      if (view >= 3)          insights.push({ color: 'var(--green)',   text: 'Excellent view — significant value boost' });
+      if (house_age > 60)     insights.push({ color: 'var(--accent2)', text: 'Older home — slight negative on price' });
+      if (was_renovated === 1)insights.push({ color: 'var(--green)',   text: 'Renovated — positive signal on price' });
+      if (condition >= 4)     insights.push({ color: 'var(--green)',   text: 'Good/Excellent condition — positive signal' });
+      if (bedrooms > 5)       insights.push({ color: 'var(--accent2)', text: 'Many bedrooms — diminishing returns observed' });
+      if (insights.length === 0) insights.push({ color: 'var(--muted)', text: 'Average profile — no strong outlier factors' });
+
+      document.getElementById('insights').innerHTML = insights.map(i =>
+        `<div class="insight-item">
+          <div class="insight-dot" style="background:${i.color};"></div>
+          <span>${i.text}</span>
+        </div>`
+      ).join('');
+
+      // Animate price count-up
+      let start = 0;
+      const step = price / (800 / 16);
+      const counter = setInterval(() => {
+        start = Math.min(start + step, price);
+        priceEl.textContent = '$' + Math.round(start).toLocaleString();
+        if (start >= price) clearInterval(counter);
+      }, 16);
+
+    } catch (err) {
+      priceEl.textContent = 'Error';
+      priceEl.classList.add('result-placeholder');
+      document.getElementById('result-sub').textContent = '⚠️ Could not reach server. Is app.py running?';
+      console.error(err);
+    } finally {
+      btn.textContent   = 'Calculate Predicted Price →';
+      btn.style.opacity = '1';
+      btn.style.cursor  = 'pointer';
+    }
+  }
+</script>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="if(event.target===this)closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="" />
+</div>
+
+</body>
+</html>

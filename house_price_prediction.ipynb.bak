@@ -1,0 +1,429 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# 🏠 House Price Prediction\n",
+    "### Linear & Polynomial Regression — King County, WA Dataset\n",
+    "\n",
+    "**Columns:** `date, price, bedrooms, bathrooms, sqft_living, sqft_lot, floors, waterfront, view, condition, sqft_above, sqft_basement, yr_built, yr_renovated, street, city, statezip, country`"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 📦 Step 1: Import Libraries"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "import seaborn as sns\n",
+    "\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "from sklearn.linear_model import LinearRegression, Ridge\n",
+    "from sklearn.preprocessing import PolynomialFeatures, StandardScaler, LabelEncoder\n",
+    "from sklearn.pipeline import Pipeline\n",
+    "from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score\n",
+    "from sklearn.impute import SimpleImputer\n",
+    "\n",
+    "import warnings\n",
+    "warnings.filterwarnings('ignore')\n",
+    "\n",
+    "plt.style.use('seaborn-v0_8-whitegrid')\n",
+    "sns.set_palette('husl')\n",
+    "print('✅ Libraries loaded!')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 📂 Step 2: Load Your Dataset"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df = pd.read_csv('data.csv')\n",
+    "\n",
+    "print(f'✅ Loaded: {df.shape[0]:,} rows × {df.shape[1]} columns')\n",
+    "df.head(3)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 🔍 Step 3: Exploratory Data Analysis (EDA)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print('=== Data Types ===')\n",
+    "print(df.dtypes)\n",
+    "print('\\n=== Missing Values ===')\n",
+    "print(df.isnull().sum())\n",
+    "print('\\n=== Price Statistics ===')\n",
+    "print(df['price'].describe())"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig, axes = plt.subplots(2, 3, figsize=(16, 10))\n",
+    "fig.suptitle('Exploratory Data Analysis — House Prices', fontsize=16, fontweight='bold')\n",
+    "\n",
+    "# 1. Price Distribution\n",
+    "axes[0,0].hist(df['price'], bins=60, color='steelblue', edgecolor='white')\n",
+    "axes[0,0].set_title('Price Distribution')\n",
+    "axes[0,0].set_xlabel('Price ($)')\n",
+    "axes[0,0].set_ylabel('Count')\n",
+    "\n",
+    "# 2. Log Price Distribution\n",
+    "axes[0,1].hist(np.log1p(df['price']), bins=60, color='coral', edgecolor='white')\n",
+    "axes[0,1].set_title('Log(Price) Distribution')\n",
+    "axes[0,1].set_xlabel('log(Price)')\n",
+    "\n",
+    "# 3. sqft_living vs price\n",
+    "axes[0,2].scatter(df['sqft_living'], df['price'], alpha=0.2, color='mediumseagreen', s=10)\n",
+    "axes[0,2].set_title('Sqft Living vs Price')\n",
+    "axes[0,2].set_xlabel('Sqft Living')\n",
+    "axes[0,2].set_ylabel('Price ($)')\n",
+    "\n",
+    "# 4. Bedrooms vs Price\n",
+    "df.boxplot(column='price', by='bedrooms', ax=axes[1,0])\n",
+    "axes[1,0].set_title('Bedrooms vs Price')\n",
+    "axes[1,0].set_xlabel('Bedrooms')\n",
+    "axes[1,0].set_ylabel('Price ($)')\n",
+    "plt.sca(axes[1,0]); plt.title('Bedrooms vs Price')\n",
+    "\n",
+    "# 5. Condition vs Price\n",
+    "df.boxplot(column='price', by='condition', ax=axes[1,1])\n",
+    "axes[1,1].set_title('Condition vs Price')\n",
+    "axes[1,1].set_xlabel('Condition (1-5)')\n",
+    "plt.sca(axes[1,1]); plt.title('Condition vs Price')\n",
+    "\n",
+    "# 6. Waterfront vs Price\n",
+    "df.boxplot(column='price', by='waterfront', ax=axes[1,2])\n",
+    "axes[1,2].set_title('Waterfront vs Price')\n",
+    "axes[1,2].set_xlabel('Waterfront (0=No, 1=Yes)')\n",
+    "plt.sca(axes[1,2]); plt.title('Waterfront vs Price')\n",
+    "\n",
+    "plt.tight_layout()\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Correlation heatmap\n",
+    "numeric_cols = ['price','bedrooms','bathrooms','sqft_living','sqft_lot',\n",
+    "                'floors','waterfront','view','condition',\n",
+    "                'sqft_above','sqft_basement','yr_built','yr_renovated']\n",
+    "\n",
+    "plt.figure(figsize=(12, 8))\n",
+    "corr = df[numeric_cols].corr()\n",
+    "mask = np.triu(np.ones_like(corr, dtype=bool))\n",
+    "sns.heatmap(corr, mask=mask, annot=True, fmt='.2f', cmap='coolwarm',\n",
+    "            linewidths=0.5, vmin=-1, vmax=1)\n",
+    "plt.title('Feature Correlation Heatmap', fontsize=14, fontweight='bold')\n",
+    "plt.tight_layout()\n",
+    "plt.show()\n",
+    "\n",
+    "print('\\n📌 Top features correlated with price:')\n",
+    "print(corr['price'].sort_values(ascending=False).drop('price'))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 🛠️ Step 4: Feature Engineering & Preprocessing"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df2 = df.copy()\n",
+    "\n",
+    "# ── Date features ─────────────────────────────────────────────────────────────\n",
+    "df2['date'] = pd.to_datetime(df2['date'])\n",
+    "df2['sale_year']  = df2['date'].dt.year\n",
+    "df2['sale_month'] = df2['date'].dt.month\n",
+    "\n",
+    "# ── Derived features ──────────────────────────────────────────────────────────\n",
+    "df2['house_age']       = df2['sale_year'] - df2['yr_built']\n",
+    "df2['was_renovated']   = (df2['yr_renovated'] > 0).astype(int)\n",
+    "df2['yrs_since_renov'] = np.where(\n",
+    "    df2['yr_renovated'] > 0,\n",
+    "    df2['sale_year'] - df2['yr_renovated'],\n",
+    "    df2['house_age']\n",
+    ")\n",
+    "df2['total_sqft']   = df2['sqft_living'] + df2['sqft_lot']\n",
+    "df2['bath_per_bed'] = df2['bathrooms'] / (df2['bedrooms'].replace(0, 1))\n",
+    "\n",
+    "# ── Encode city (top 20 cities, rest = 'Other') ───────────────────────────────\n",
+    "top_cities = df2['city'].value_counts().nlargest(20).index\n",
+    "df2['city_enc'] = df2['city'].apply(lambda x: x if x in top_cities else 'Other')\n",
+    "le = LabelEncoder()\n",
+    "df2['city_enc'] = le.fit_transform(df2['city_enc'])\n",
+    "\n",
+    "print('✅ Feature engineering complete!')\n",
+    "print('New features: house_age, was_renovated, yrs_since_renov, total_sqft, bath_per_bed, city_enc')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "FEATURES = [\n",
+    "    'bedrooms', 'bathrooms', 'sqft_living', 'sqft_lot',\n",
+    "    'floors', 'waterfront', 'view', 'condition',\n",
+    "    'sqft_above', 'sqft_basement',\n",
+    "    'house_age', 'was_renovated', 'yrs_since_renov',\n",
+    "    'total_sqft', 'bath_per_bed', 'city_enc', 'sale_month'\n",
+    "]\n",
+    "TARGET = 'price'\n",
+    "\n",
+    "X = df2[FEATURES]\n",
+    "y = df2[TARGET]\n",
+    "\n",
+    "imputer = SimpleImputer(strategy='median')\n",
+    "X_clean = pd.DataFrame(imputer.fit_transform(X), columns=FEATURES)\n",
+    "\n",
+    "X_train, X_test, y_train, y_test = train_test_split(\n",
+    "    X_clean, y, test_size=0.2, random_state=42\n",
+    ")\n",
+    "\n",
+    "print(f'✅ Train: {X_train.shape[0]:,} samples  |  Test: {X_test.shape[0]:,} samples')\n",
+    "print(f'✅ Features used: {len(FEATURES)}')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 📈 Step 5: Linear Regression"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def evaluate_model(name, model, X_train, X_test, y_train, y_test):\n",
+    "    model.fit(X_train, y_train)\n",
+    "    y_pred = model.predict(X_test)\n",
+    "    rmse = np.sqrt(mean_squared_error(y_test, y_pred))\n",
+    "    mae  = mean_absolute_error(y_test, y_pred)\n",
+    "    r2   = r2_score(y_test, y_pred)\n",
+    "    print(f'\\n📊 {name}')\n",
+    "    print(f'   RMSE : ${rmse:,.0f}  (avg prediction error)')\n",
+    "    print(f'   MAE  : ${mae:,.0f}  (avg absolute error)')\n",
+    "    print(f'   R²   : {r2:.4f}      (1.0 = perfect)')\n",
+    "    return y_pred, r2\n",
+    "\n",
+    "lr = LinearRegression()\n",
+    "y_pred_lr, r2_lr = evaluate_model('Linear Regression', lr, X_train, X_test, y_train, y_test)\n",
+    "\n",
+    "# Feature importance\n",
+    "coef_df = pd.DataFrame({'Feature': FEATURES, 'Coefficient': lr.coef_})\n",
+    "coef_df = coef_df.iloc[coef_df['Coefficient'].abs().argsort()[::-1]]\n",
+    "print('\\n📌 Top Feature Coefficients:')\n",
+    "print(coef_df.head(10).to_string(index=False))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig, axes = plt.subplots(1, 3, figsize=(18, 5))\n",
+    "fig.suptitle('Linear Regression Results', fontsize=14, fontweight='bold')\n",
+    "\n",
+    "# Actual vs Predicted\n",
+    "axes[0].scatter(y_test, y_pred_lr, alpha=0.3, color='steelblue', s=10)\n",
+    "axes[0].plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)\n",
+    "axes[0].set_xlabel('Actual Price ($)')\n",
+    "axes[0].set_ylabel('Predicted Price ($)')\n",
+    "axes[0].set_title(f'Actual vs Predicted  (R²={r2_lr:.3f})')\n",
+    "\n",
+    "# Residuals\n",
+    "residuals = y_test.values - y_pred_lr\n",
+    "axes[1].scatter(y_pred_lr, residuals, alpha=0.3, color='coral', s=10)\n",
+    "axes[1].axhline(0, color='black', lw=1.5, linestyle='--')\n",
+    "axes[1].set_xlabel('Predicted Price ($)')\n",
+    "axes[1].set_ylabel('Residuals ($)')\n",
+    "axes[1].set_title('Residual Plot')\n",
+    "\n",
+    "# Feature importance\n",
+    "top10 = coef_df.head(10)\n",
+    "colors = ['steelblue' if c > 0 else 'coral' for c in top10['Coefficient']]\n",
+    "axes[2].barh(top10['Feature'], top10['Coefficient'], color=colors)\n",
+    "axes[2].set_title('Top 10 Feature Coefficients')\n",
+    "axes[2].set_xlabel('Coefficient Value')\n",
+    "axes[2].invert_yaxis()\n",
+    "\n",
+    "plt.tight_layout()\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 🔢 Step 6: Polynomial Regression"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "results = {'Linear Regression': r2_lr}\n",
+    "\n",
+    "for degree in [2, 3]:\n",
+    "    pipe = Pipeline([\n",
+    "        ('scaler', StandardScaler()),\n",
+    "        ('poly',   PolynomialFeatures(degree=degree, include_bias=False)),\n",
+    "        ('model',  Ridge(alpha=100))\n",
+    "    ])\n",
+    "    _, r2 = evaluate_model(\n",
+    "        f'Polynomial Regression (degree={degree})',\n",
+    "        pipe, X_train, X_test, y_train, y_test\n",
+    "    )\n",
+    "    results[f'Polynomial (deg {degree})'] = r2"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 🏁 Step 7: Model Comparison"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "plt.figure(figsize=(8, 4))\n",
+    "colors = ['steelblue', 'coral', 'mediumseagreen']\n",
+    "bars = plt.barh(list(results.keys()), list(results.values()), color=colors)\n",
+    "plt.xlabel('R² Score')\n",
+    "plt.title('Model Comparison — R² Score (higher = better)')\n",
+    "plt.xlim(0, 1.05)\n",
+    "for bar, val in zip(bars, results.values()):\n",
+    "    plt.text(bar.get_width() + 0.005, bar.get_y() + bar.get_height()/2,\n",
+    "             f'{val:.4f}', va='center', fontweight='bold')\n",
+    "plt.tight_layout()\n",
+    "plt.show()\n",
+    "\n",
+    "best = max(results, key=results.get)\n",
+    "print(f'\\n🏆 Best Model: {best}  |  R² = {results[best]:.4f}')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 🔮 Step 8: Predict a New House"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Customize these values for any house you want to predict\n",
+    "new_house = pd.DataFrame([{\n",
+    "    'bedrooms':        3,\n",
+    "    'bathrooms':       2.0,\n",
+    "    'sqft_living':     1800,\n",
+    "    'sqft_lot':        6000,\n",
+    "    'floors':          1.5,\n",
+    "    'waterfront':      0,\n",
+    "    'view':            0,\n",
+    "    'condition':       3,\n",
+    "    'sqft_above':      1800,\n",
+    "    'sqft_basement':   0,\n",
+    "    'house_age':       25,\n",
+    "    'was_renovated':   0,\n",
+    "    'yrs_since_renov': 25,\n",
+    "    'total_sqft':      7800,\n",
+    "    'bath_per_bed':    0.67,\n",
+    "    'city_enc':        5,\n",
+    "    'sale_month':      5,\n",
+    "}])\n",
+    "\n",
+    "predicted = lr.predict(new_house)[0]\n",
+    "print(f'🏠 Predicted Sale Price: ${predicted:,.0f}')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 📝 Summary & Next Steps\n",
+    "\n",
+    "### What you built:\n",
+    "- ✅ Processed a large real-world King County housing dataset\n",
+    "- ✅ Engineered features: `house_age`, `was_renovated`, `bath_per_bed`, `city_enc`\n",
+    "- ✅ Trained **Linear Regression** and **Polynomial Regression** models\n",
+    "- ✅ Evaluated with RMSE, MAE, R² and visualized results\n",
+    "\n",
+    "### 🚀 Challenges to level up:\n",
+    "1. **Log-transform the target** — `y = np.log1p(price)` often improves linear model R²\n",
+    "2. **One-hot encode city** instead of label encoding\n",
+    "3. **Try XGBoost / Random Forest** — usually much better on this dataset\n",
+    "4. **Hyperparameter tuning** — `GridSearchCV` on Ridge alpha\n",
+    "5. **Map visualization** — plot prices geographically using city coordinates"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "name": "python",
+   "version": "3.10.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
